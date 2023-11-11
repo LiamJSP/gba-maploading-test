@@ -1,46 +1,62 @@
-#include <gba.h>
-#include <stdio.h>
-#include "tilesheet.h"
+#include <gba_console.h>
+#include <gba_video.h>
+#include <gba_interrupt.h>
+#include <gba_input.h>
+#include <gba_sprites.h>
 
-const u16 map_data[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 26, 26, 26, 26, 26, 26, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 26, 26, 26, 26, 26, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 21, 22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 18, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 18, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 17, 18, 0, 0, 0, 0, 19, 20, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6};
+// Import the converted data from grit.
+#include "level.h"
 
 #define SCREEN_WIDTH 240
 #define SCREEN_HEIGHT 160
-#define TILE_SIZE 16
+#define TILE_WIDTH 16
+#define TILE_HEIGHT 16
+#define MAP_WIDTH 64
+#define MAP_HEIGHT 64
 
-int main() {
-    // Set up the mode and background
-    REG_DISPCNT = MODE_0 | BG0_ENABLE;
-    BGCTRL[0] = BG_16_COLOR | BG_SIZE_0 | BG_PRIORITY(0);
+int cameraX = (MAP_WIDTH * TILE_WIDTH - SCREEN_WIDTH) / 2;
+int cameraY = (MAP_HEIGHT * TILE_HEIGHT - SCREEN_HEIGHT) / 2;
 
+int main(void) {
+    REG_DISPCNT = MODE_0 | BG0_ON;
 
-    int tilesheetCount = sizeof(tilesheetTiles) / sizeof(tilesheetTiles[0]);
-
-    for (int i = 0; i < tilesheetCount; i++) {
-        ((u16*)CHAR_BASE_BLOCK(0))[i] = tilesheetTiles[i];
+    // Load palette data.
+    for (int i = 0; i < levelPalLen / 2; i++) {
+        ((u16*)BG_PALETTE)[i] = levelPal[i];
     }
 
-    int paletteCount = tilesheetPalLen / sizeof(tilesheetPal[0]);
-    for (int i = 0; i < paletteCount; i++) {
-        BG_PALETTE[i] = tilesheetPal[i];
+    // Load tile data.
+    for (int i = 0; i < levelTilesLen / 4; i++) { 
+        ((u32*)CHAR_BASE_BLOCK(0))[i] = levelTiles[i];
     }
 
-    // Need to think through this loop more
-    int width = SCREEN_WIDTH / TILE_SIZE;
-    int height = SCREEN_HEIGHT / TILE_SIZE;
-
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            int idx = y * width + x;
-            ((u16*)SCREEN_BASE_BLOCK(31))[idx] = map_data[idx];
-        }
+    // Load map data.
+    for (int i = 0; i < levelMapLen / 2; i++) {
+        ((u16*)SCREEN_BASE_BLOCK(31))[i] = levelMap[i];
     }
 
-    // Infinite loop to keep the GBA running
+    REG_BG0CNT = BG_SIZE_3 | BG_16_COLOR | CHAR_BASE(0) | SCREEN_BASE(31);
+
+    // Main loop.
     while (1) {
-        VBlankIntrWait();  // Wait for the screen to finish drawing
+        // Wait for VBlank
+        while(REG_VCOUNT >= 160);
+        while(REG_VCOUNT < 160);
+
+        // Read input.
+        scanKeys();
+        u16 keys = keysHeld();
+
+        // Update the camera based on D-pad inputs.
+        if (keys & KEY_UP) cameraY -= 2;
+        if (keys & KEY_DOWN) cameraY += 2;
+        if (keys & KEY_LEFT) cameraX -= 2;
+        if (keys & KEY_RIGHT) cameraX += 2;
+
+        // Update BG0 scroll registers with the camera position.
+        REG_BG0HOFS = cameraX;
+        REG_BG0VOFS = cameraY;
     }
 
     return 0;
 }
-
